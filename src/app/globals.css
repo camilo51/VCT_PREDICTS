@@ -1,0 +1,128 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #0b0e14;
+  --bg-elevated: #12161f;
+  --bg-elevated-2: #191e29;
+  --border: #242b38;
+  --border-soft: #1a2029;
+  --text: #e8ebf1;
+  --text-dim: #8a93a6;
+  --text-faint: #5b6472;
+
+  --team-a: #ff4655; /* spike red — team1 / attack / primary */
+  --team-a-dim: #7a2229;
+  --team-b: #34d8c7; /* signal cyan — team2 / defense / secondary */
+  --team-b-dim: #1a5a53;
+
+  --warn: #f5a623;
+  --good: #34d8c7;
+  --bad: #ff4655;
+
+  --region-americas: #fb923c;
+  --region-emea: #4ade80;
+  --region-pacific: #38bdf8;
+  --region-china: #fbbf24;
+  --region-international: #a78bfa;
+
+  --font-display: var(--font-oswald);
+  --font-body: var(--font-inter);
+  --font-data: var(--font-plex-mono);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-bg-elevated-2: var(--bg-elevated-2);
+  --color-border: var(--border);
+  --color-border-soft: var(--border-soft);
+  --color-text: var(--text);
+  --color-text-dim: var(--text-dim);
+  --color-text-faint: var(--text-faint);
+  --color-team-a: var(--team-a);
+  --color-team-a-dim: var(--team-a-dim);
+  --color-team-b: var(--team-b);
+  --color-team-b-dim: var(--team-b-dim);
+  --color-warn: var(--warn);
+  --color-good: var(--good);
+  --color-bad: var(--bad);
+
+  --color-region-americas: var(--region-americas);
+  --color-region-emea: var(--region-emea);
+  --color-region-pacific: var(--region-pacific);
+  --color-region-china: var(--region-china);
+  --color-region-international: var(--region-international);
+
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-data: var(--font-data);
+}
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+.font-data {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+.animate-live-pulse {
+  animation: live-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-elevated) 25%, var(--bg-elevated-2) 37%, var(--bg-elevated) 63%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+::selection {
+  background: var(--team-a);
+  color: white;
+}
+
+:focus-visible {
+  outline: 2px solid var(--team-b);
+  outline-offset: 2px;
+}

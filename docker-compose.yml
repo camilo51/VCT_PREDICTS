@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: vct_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: vct
+      POSTGRES_PASSWORD: vct
+      POSTGRES_DB: vct
+    ports:
+      - "5442:5432"
+    volumes:
+      - vct_db_data:/var/lib/postgresql/data
+
+volumes:
+  vct_db_data:

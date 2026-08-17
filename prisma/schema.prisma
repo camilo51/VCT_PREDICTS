@@ -1,0 +1,319 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Region {
+  AMERICAS
+  EMEA
+  PACIFIC
+  CHINA
+  INTERNATIONAL
+}
+
+enum MatchStatus {
+  UPCOMING
+  LIVE
+  FINAL
+}
+
+enum MapStatus {
+  UPCOMING
+  LIVE
+  COMPLETED
+}
+
+enum PredictionKind {
+  PRE_MATCH
+  LIVE
+}
+
+enum PickBanType {
+  PICK
+  BAN
+  DECIDER
+}
+
+/// A VCT tournament (event on VLR), e.g. "VCT 2026: Americas Stage 2"
+model Event {
+  id           String   @id // vlr event id
+  name         String
+  region       Region
+  circuitName  String?
+  description  String?
+  imgUrl       String?
+  prizepool    String?
+  datesText    String?
+  location     String?
+  status       String? // ongoing / upcoming / completed (as reported by source)
+  sourceUrl    String?
+  lastSyncedAt DateTime @default(now()) @updatedAt
+
+  stages       Stage[]
+  matches      Match[]
+  participants EventTeam[]
+
+  @@index([region])
+}
+
+model Stage {
+  id       String  @id @default(cuid())
+  eventId  String
+  name     String
+  slug     String?
+  datesText String?
+  active   Boolean @default(false)
+
+  event   Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  matches Match[]
+
+  @@unique([eventId, name])
+}
+
+/// Team participation record within an event (roster snapshot, seed, placement)
+model EventTeam {
+  id          String  @id @default(cuid())
+  eventId     String
+  teamId      String
+  seed        String?
+  placement   String?
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  team  Team  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, teamId])
+}
+
+model Team {
+  id           String   @id // vlr team id
+  name         String
+  tag          String?
+  logoUrl      String?
+  country      String?
+  region       Region?
+  sourceUrl    String?
+  lastSyncedAt DateTime @default(now()) @updatedAt
+
+  players        Player[]
+  eventEntries   EventTeam[]
+  homeMatches    Match[]         @relation("Team1Matches")
+  awayMatches    Match[]         @relation("Team2Matches")
+  mapAsWinner    MapPlayed[]     @relation("MapWinnerTeam")
+  pickedMaps     MapPlayed[]     @relation("MapPickedByTeam")
+  mapPlayerStats MapPlayerStat[]
+  ratingHistory  TeamRating[]
+
+  @@index([region])
+}
+
+model Player {
+  id           String   @id // vlr player id
+  handle       String
+  realName     String?
+  country      String?
+  imgUrl       String?
+  currentTeamId String?
+  active       Boolean  @default(true)
+  sourceUrl    String?
+  lastSyncedAt DateTime @default(now()) @updatedAt
+
+  currentTeam Team? @relation(fields: [currentTeamId], references: [id])
+
+  mapStats     MapPlayerStat[]
+  agentStats   PlayerAgentStat[]
+
+  @@index([currentTeamId])
+}
+
+/// A scheduled/live/finished VCT match (a Bo1/Bo3/Bo5 series)
+model Match {
+  id            String      @id // vlr match id
+  eventId       String
+  stageId       String?
+  seriesTitle   String?     // e.g. "Playoffs - Upper Semifinals"
+  format        String?     // "Bo1" | "Bo3" | "Bo5"
+  status        MatchStatus
+  scheduledAt   DateTime?
+  team1Id       String?
+  team2Id       String?
+  team1Score    Int?
+  team2Score    Int?
+  streamsJson   Json?
+  vodsJson      Json?
+  economyJson   Json? // series-aggregate economy per team: pistolWon, eco/semiEco/semiBuy/fullBuy won/total
+  sourceUrl     String?
+  mapsAnnounced Boolean     @default(false)
+  lastSyncedAt  DateTime    @default(now()) @updatedAt
+
+  event Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  stage Stage? @relation(fields: [stageId], references: [id])
+  team1 Team?  @relation("Team1Matches", fields: [team1Id], references: [id])
+  team2 Team?  @relation("Team2Matches", fields: [team2Id], references: [id])
+
+  maps        MapPlayed[]
+  pickBans    PickBan[]
+  predictions PredictionSnapshot[]
+  evaluation  MatchEvaluation?
+
+  @@index([status, scheduledAt])
+  @@index([eventId])
+  @@index([team1Id])
+  @@index([team2Id])
+}
+
+model PickBan {
+  id       String      @id @default(cuid())
+  matchId  String
+  order    Int
+  type     PickBanType
+  teamId   String?
+  mapName  String
+  note     String?
+
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@index([matchId])
+}
+
+/// A single map played within a match series
+model MapPlayed {
+  id            String    @id @default(cuid())
+  matchId       String
+  orderIndex    Int
+  mapName       String
+  status        MapStatus @default(UPCOMING)
+  pickedByTeamId String?
+  team1Score    Int?
+  team2Score    Int?
+  team1RoundsCt Int?
+  team1RoundsT  Int?
+  team2RoundsCt Int?
+  team2RoundsT  Int?
+  winnerTeamId  String?
+  durationMinutes Int?
+
+  match       Match        @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  pickedBy    Team?        @relation("MapPickedByTeam", fields: [pickedByTeamId], references: [id])
+  winnerTeam  Team?        @relation("MapWinnerTeam", fields: [winnerTeamId], references: [id])
+  playerStats MapPlayerStat[]
+
+  @@unique([matchId, orderIndex])
+  @@index([mapName])
+}
+
+model MapPlayerStat {
+  id           String  @id @default(cuid())
+  mapPlayedId  String
+  playerId     String
+  teamId       String
+  agentsJson   Json // string[] of agent names used on this map
+  rating       Float?
+  acs          Float?
+  kills        Int?
+  deaths       Int?
+  assists      Int?
+  kast         Float?
+  adr          Float?
+  hs           Float?
+  firstBloods  Int?
+  firstDeaths  Int?
+
+  map    MapPlayed @relation(fields: [mapPlayedId], references: [id], onDelete: Cascade)
+  player Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  team   Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([mapPlayedId, playerId])
+  @@index([playerId])
+  @@index([teamId])
+}
+
+/// Cached per-player, per-agent aggregate stats (from source's player page), refreshed on sync
+model PlayerAgentStat {
+  id         String @id @default(cuid())
+  playerId   String
+  timespan   String // "30d" | "60d" | "90d" | "all"
+  agentName  String
+  mapsPlayed Int?
+  pickRate   Float?
+  rating     Float?
+  acs        Float?
+  kd         Float?
+  kast       Float?
+  adr        Float?
+  fkfd       Float?
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, timespan, agentName])
+}
+
+/// Internally computed team rating over time (our own rating engine, not sourced externally)
+model TeamRating {
+  id        String   @id @default(cuid())
+  teamId    String
+  region    Region
+  asOf      DateTime @default(now())
+  rating    Float
+  matchesConsidered Int
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([teamId, asOf])
+}
+
+/// A prediction produced by our model at a point in time. History preserved (never overwritten).
+model PredictionSnapshot {
+  id                 String         @id @default(cuid())
+  matchId            String
+  kind               PredictionKind
+  createdAt          DateTime       @default(now())
+  team1WinProb       Float
+  team2WinProb       Float
+  confidence         Float // 0-100
+  seriesScoreProbsJson Json // e.g. {"2-0":31,"2-1":33,"0-2":16,"1-2":20}
+  predictedMapsJson  Json? // per-map win% once maps confirmed, or hypothetical map-pool probabilities before
+  factorsForJson     Json // dynamically generated advantage bullet points
+  factorsAgainstJson Json // risk / uncertainty bullet points
+  dataQuality        Float // 0-1, drives confidence
+  modelVersion       String
+  isActive           Boolean        @default(true)
+  isBackfill         Boolean        @default(false) // reconstructed after the match ended (sync was offline), not captured live
+
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@index([matchId, isActive])
+  @@index([matchId, kind, createdAt])
+}
+
+/// Post-match grading of the pre-match prediction against the real result
+model MatchEvaluation {
+  id                    String   @id @default(cuid())
+  matchId               String   @unique
+  preMatchSnapshotId    String?
+  predictedWinnerTeamId String?
+  actualWinnerTeamId    String?
+  predictedScore        String?
+  actualScore           String?
+  winnerCorrect         Boolean?
+  scoreCorrect          Boolean?
+  mapsCorrect           Int?
+  mapsTotal             Int?
+  isBackfill            Boolean  @default(false) // graded against a reconstructed, not live-captured, prediction
+  evaluatedAt           DateTime @default(now())
+
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+}
+
+model SyncLog {
+  id        String   @id @default(cuid())
+  task      String
+  startedAt DateTime @default(now())
+  finishedAt DateTime?
+  ok        Boolean?
+  message   String?
+  itemsSynced Int?
+}
