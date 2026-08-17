@@ -53,7 +53,7 @@ export function Sidebar() {
                 }`}
               >
                 <span className={`relative flex h-1.5 w-1.5 shrink-0 rounded-full ${active ? "bg-team-a" : "bg-transparent"}`} />
-                <Icon className={`h-4 w-4 shrink-0 ${active ? "text-team-a" : "text-text-faint group-hover:text-text-dim"}`} />
+                <Icon className={`h-[18px] w-[18px] shrink-0 ${active ? "text-team-a" : "text-text-faint group-hover:text-text-dim"}`} />
                 <span>{item.label}</span>
               </Link>
             );

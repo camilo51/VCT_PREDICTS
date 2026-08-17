@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Oswald, Inter, IBM_Plex_Mono } from "next/font/google";
 import { Sidebar } from "@/components/Sidebar";
 import "./globals.css";
@@ -10,6 +10,17 @@ const plexMono = IBM_Plex_Mono({ variable: "--font-plex-mono", subsets: ["latin"
 export const metadata: Metadata = {
   title: "VCT Predicts",
   description: "Centro de seguimiento, análisis y predicción del Valorant Champions Tour.",
+  appleWebApp: {
+    capable: true,
+    title: "VCT Predicts",
+    statusBarStyle: "black-translucent",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0b0e14",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
