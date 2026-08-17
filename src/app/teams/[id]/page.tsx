@@ -50,7 +50,7 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
       <header className="flex items-center gap-4 rounded-lg border border-border bg-bg-elevated p-6">
         {team.logoUrl ? (
           <div className="relative h-16 w-16 shrink-0">
-            <Image src={team.logoUrl} alt={team.name} fill sizes="64px" className="object-contain" unoptimized />
+            <Image src={team.logoUrl} alt={team.name} fill sizes="64px" className="object-contain" unoptimized referrerPolicy="no-referrer" />
           </div>
         ) : (
           <div className="flex h-16 w-16 items-center justify-center rounded bg-bg-elevated-2 font-display text-xl text-text-dim">

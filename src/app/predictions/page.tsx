@@ -58,11 +58,11 @@ export default async function PredictionsPage({ searchParams }: { searchParams: 
                   <span className="text-text-faint">{m.scheduledAt ? formatMatchDateLabel(new Date(m.scheduledAt)) : "Por confirmar"}</span>
                 </div>
                 <div className="mt-2 flex items-center gap-2 font-display text-lg">
-                  {m.team1?.logoUrl && <Image src={m.team1.logoUrl} alt="" width={22} height={22} unoptimized className="object-contain" />}
+                  {m.team1?.logoUrl && <Image src={m.team1.logoUrl} alt="" width={22} height={22} unoptimized referrerPolicy="no-referrer" className="object-contain" />}
                   <span>{m.team1?.name ?? "TBD"}</span>
                   <span className="text-text-faint text-sm">vs</span>
                   <span>{m.team2?.name ?? "TBD"}</span>
-                  {m.team2?.logoUrl && <Image src={m.team2.logoUrl} alt="" width={22} height={22} unoptimized className="object-contain" />}
+                  {m.team2?.logoUrl && <Image src={m.team2.logoUrl} alt="" width={22} height={22} unoptimized referrerPolicy="no-referrer" className="object-contain" />}
                 </div>
                 <div className="mt-3">
                   <DuelBar leftLabel={m.team1?.name} rightLabel={m.team2?.name} leftPct={p.team1WinProb} rightPct={p.team2WinProb} size="sm" />

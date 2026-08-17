@@ -30,7 +30,7 @@ function TeamLogo({ name, url }: { name: string; url: string | null }) {
   }
   return (
     <div className="relative h-9 w-9 shrink-0">
-      <Image src={url} alt={name} fill sizes="36px" className="object-contain" unoptimized />
+      <Image src={url} alt={name} fill sizes="36px" className="object-contain" unoptimized referrerPolicy="no-referrer" />
     </div>
   );
 }
