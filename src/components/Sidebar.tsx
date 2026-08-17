@@ -59,9 +59,9 @@ export function Sidebar() {
             );
           })}
         </nav>
-        <div className="flex items-center justify-between px-5 py-4 text-[11px] text-text-faint border-t border-border-soft">
-          <span>Datos: VLR.gg · actualización automática</span>
-          <span className="font-data text-text-faint">v{pkg.version}</span>
+        <div className="px-5 py-4 text-[11px] text-text-faint border-t border-border-soft">
+          <p>Datos: VLR.gg · actualización automática</p>
+          <p className="mt-1 font-data text-text-faint">v{pkg.version}</p>
         </div>
       </aside>
 
