@@ -15,9 +15,12 @@ async function collectCandidateEvents(): Promise<VlrEventListItem[]> {
     }
   }
 
-  // "completed" is paginated across the whole VLR event history; only scan
-  // enough recent pages to pick up the current VCT season's finished stages.
-  const maxCompletedPages = 10;
+  // "completed" is paginated across the whole VLR event history. A deep scan
+  // is only useful for the one-time historical backfill — regular cron ticks
+  // just need the most recent pages to catch a stage that just wrapped up,
+  // so they stay well under the workflow's time budget. Override via
+  // SYNC_COMPLETED_PAGES for an occasional deeper manual backfill.
+  const maxCompletedPages = Number(process.env.SYNC_COMPLETED_PAGES) || 3;
   for (let page = 1; page <= maxCompletedPages; page++) {
     try {
       const items = await getEvents({ status: "completed", page });
