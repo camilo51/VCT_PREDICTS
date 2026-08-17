@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { SectionCard } from "@/components/SectionCard";
 import { MatchCard } from "@/components/MatchCard";
 import { REGION_LABEL } from "@/lib/region";
+import { proxiedLogo } from "@/lib/image";
 
 export const dynamic = "force-dynamic";
 
@@ -75,7 +76,7 @@ export default async function TournamentDetailPage({ params }: { params: Promise
             {event.participants.map((p) => (
               <li key={p.id}>
                 <Link href={`/teams/${p.team.id}`} className="flex items-center gap-2 rounded px-1.5 py-1 text-sm hover:bg-bg-elevated-2">
-                  {p.team.logoUrl && <Image src={p.team.logoUrl} alt="" width={18} height={18} unoptimized referrerPolicy="no-referrer" className="object-contain" />}
+                  {p.team.logoUrl && <Image src={proxiedLogo(p.team.logoUrl)!} alt="" width={18} height={18} unoptimized className="object-contain" />}
                   <span>{p.team.name}</span>
                   {p.seed && <span className="ml-auto text-xs text-text-faint">{p.seed}</span>}
                 </Link>

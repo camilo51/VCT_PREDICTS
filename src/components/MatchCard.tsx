@@ -6,6 +6,7 @@ import { ConfidenceMeter, StatusBadge, MapPoolBadge } from "./Badges";
 import { Countdown } from "./Countdown";
 import { formatMatchDateLabel } from "@/lib/format";
 import { RegionBadge, RegionStripe } from "./RegionBadge";
+import { proxiedLogo } from "@/lib/image";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- used via `typeof` below
 const matchCardArgs = {
@@ -30,7 +31,7 @@ function TeamLogo({ name, url }: { name: string; url: string | null }) {
   }
   return (
     <div className="relative h-9 w-9 shrink-0">
-      <Image src={url} alt={name} fill sizes="36px" className="object-contain" unoptimized referrerPolicy="no-referrer" />
+      <Image src={proxiedLogo(url)!} alt={name} fill sizes="36px" className="object-contain" unoptimized />
     </div>
   );
 }

@@ -16,6 +16,7 @@ import { Countdown } from "@/components/Countdown";
 import { SectionCard } from "@/components/SectionCard";
 import { REGION_LABEL } from "@/lib/region";
 import { formatMatchDateLabel, formatRelativeTime, pct } from "@/lib/format";
+import { proxiedLogo } from "@/lib/image";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +48,7 @@ function TeamLogo({ name, url, size = 48 }: { name: string; url: string | null; 
   }
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>
-      <Image src={url} alt={name} fill sizes={`${size}px`} className="object-contain" unoptimized referrerPolicy="no-referrer" />
+      <Image src={proxiedLogo(url)!} alt={name} fill sizes={`${size}px`} className="object-contain" unoptimized />
     </div>
   );
 }

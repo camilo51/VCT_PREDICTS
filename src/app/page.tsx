@@ -10,6 +10,7 @@ import { Countdown } from "@/components/Countdown";
 import { formatMatchDateLabel, formatRelativeTime } from "@/lib/format";
 import { REGION_LABEL, REGION_COLOR } from "@/lib/region";
 import type { Region } from "@prisma/client";
+import { proxiedLogo } from "@/lib/image";
 
 export const dynamic = "force-dynamic";
 
@@ -146,13 +147,13 @@ function FeaturedMatch({ match }: { match: Awaited<ReturnType<typeof listMatches
 
       <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
         <div className="flex items-center gap-3">
-          {t1?.logoUrl && <Image src={t1.logoUrl} alt="" width={40} height={40} unoptimized referrerPolicy="no-referrer" className="object-contain" />}
+          {t1?.logoUrl && <Image src={proxiedLogo(t1.logoUrl)!} alt="" width={40} height={40} unoptimized className="object-contain" />}
           <span className="font-display text-xl tracking-wide sm:text-2xl">{t1?.name ?? "Por definir"}</span>
         </div>
         <span className="font-display text-sm text-text-faint">{match.format}</span>
         <div className="flex items-center justify-end gap-3 text-right">
           <span className="font-display text-xl tracking-wide sm:text-2xl">{t2?.name ?? "Por definir"}</span>
-          {t2?.logoUrl && <Image src={t2.logoUrl} alt="" width={40} height={40} unoptimized referrerPolicy="no-referrer" className="object-contain" />}
+          {t2?.logoUrl && <Image src={proxiedLogo(t2.logoUrl)!} alt="" width={40} height={40} unoptimized className="object-contain" />}
         </div>
       </div>
 

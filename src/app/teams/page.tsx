@@ -5,6 +5,7 @@ import { RegionFilterGroup } from "@/components/FilterBar";
 import { RegionBadge } from "@/components/RegionBadge";
 import { Pagination, parsePage } from "@/components/Pagination";
 import type { Region } from "@prisma/client";
+import { proxiedLogo } from "@/lib/image";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +42,7 @@ export default async function TeamsPage({ searchParams }: { searchParams: Promis
           <Link key={team.id} href={`/teams/${team.id}`} className="relative overflow-hidden rounded-lg border border-border bg-bg-elevated p-4 text-center transition-colors hover:border-team-a/50">
             {team.logoUrl ? (
               <div className="relative mx-auto h-12 w-12">
-                <Image src={team.logoUrl} alt={team.name} fill sizes="48px" className="object-contain" unoptimized referrerPolicy="no-referrer" />
+                <Image src={proxiedLogo(team.logoUrl)!} alt={team.name} fill sizes="48px" className="object-contain" unoptimized />
               </div>
             ) : (
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded bg-bg-elevated-2 font-display text-text-dim">
