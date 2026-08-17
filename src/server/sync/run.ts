@@ -17,9 +17,9 @@ export async function runFullSync() {
 
   const matchesResult = await syncMatches().catch((err) => {
     console.error("[sync] syncMatches failed:", err);
-    return { synced: 0, candidates: 0 };
+    return { synced: 0, candidates: 0, skipped: 0 };
   });
-  console.log(`[sync] matches: ${matchesResult.synced}/${matchesResult.candidates}`);
+  console.log(`[sync] matches: ${matchesResult.synced}/${matchesResult.candidates} (${matchesResult.skipped} ya capturados, se saltaron)`);
 
   const rosterResult = await syncTeamRosters().catch((err) => {
     console.error("[sync] syncTeamRosters failed:", err);

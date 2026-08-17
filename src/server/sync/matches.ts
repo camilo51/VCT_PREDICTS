@@ -4,19 +4,29 @@ import {
   getUpcomingMatches,
   getResults,
   getMatchDetail,
-  type VlrMatchListItem,
+  getEventMatches,
   type VlrMatchDetail,
 } from "@/server/vlr/client";
 import { regionFromEventName } from "@/lib/region";
 import { toMapStatus, toMatchStatus } from "./status";
 import { forEachThrottled } from "./util";
 
-async function collectCandidateMatches(resultPages: number): Promise<VlrMatchListItem[]> {
-  const byId = new Map<string, VlrMatchListItem>();
+/**
+ * Match ids to (re)sync. Two sources, merged:
+ *  - the global /matches (upcoming) + /results (paginated) feed — cheap and
+ *    catches brand-new matches/events we haven't tracked yet;
+ *  - every match belonging to an event we already track, via
+ *    /events/{id}/matches — this is what actually gives teams a deep match
+ *    history instead of whatever fits in a few pages of the global feed.
+ */
+async function collectCandidateMatchIds(resultPages: number): Promise<string[]> {
+  const ids = new Set<string>();
 
   try {
     const upcoming = await getUpcomingMatches();
-    for (const m of upcoming) byId.set(m.id, m);
+    for (const m of upcoming) {
+      if (regionFromEventName(m.tournament ?? m.event ?? "")) ids.add(m.id);
+    }
   } catch (err) {
     console.error("[sync:matches] failed to list upcoming:", err instanceof Error ? err.message : err);
   }
@@ -25,14 +35,22 @@ async function collectCandidateMatches(resultPages: number): Promise<VlrMatchLis
     try {
       const items = await getResults(page);
       if (items.length === 0) break;
-      for (const m of items) byId.set(m.id, m);
+      for (const m of items) {
+        if (regionFromEventName(m.tournament ?? m.event ?? "")) ids.add(m.id);
+      }
     } catch (err) {
       console.error(`[sync:matches] failed to list results page=${page}:`, err instanceof Error ? err.message : err);
       break;
     }
   }
 
-  return [...byId.values()].filter((m) => regionFromEventName(m.tournament ?? m.event ?? ""));
+  const trackedEvents = await prisma.event.findMany({ select: { id: true } });
+  await forEachThrottled(trackedEvents, 500, async (event) => {
+    const eventMatches = await getEventMatches(event.id);
+    for (const m of eventMatches) if (m.id) ids.add(m.id);
+  });
+
+  return [...ids];
 }
 
 async function ensureTeamStub(id: string, name: string, logo?: string | null) {
@@ -233,14 +251,25 @@ export async function syncMatches(opts?: { resultPages?: number; detailDelayMs?:
   const resultPages = opts?.resultPages ?? 3;
   const detailDelayMs = opts?.detailDelayMs ?? 650;
 
-  const candidates = await collectCandidateMatches(resultPages);
+  const allCandidates = await collectCandidateMatchIds(resultPages);
+
+  // A FINAL match with its maps already captured never changes — re-fetching
+  // it on every tick is pure waste (and, at cron scale, risks the job timing
+  // out). Only chase matches we haven't fully captured yet.
+  const alreadyCaptured = await prisma.match.findMany({
+    where: { id: { in: allCandidates }, status: "FINAL", mapsAnnounced: true },
+    select: { id: true },
+  });
+  const skip = new Set(alreadyCaptured.map((m) => m.id));
+  const candidates = allCandidates.filter((id) => !skip.has(id));
+
   let synced = 0;
 
-  await forEachThrottled(candidates, detailDelayMs, async (item) => {
-    const detail = await getMatchDetail(item.id, "all");
+  await forEachThrottled(candidates, detailDelayMs, async (id) => {
+    const detail = await getMatchDetail(id, "all");
     await upsertMatchFromDetail(detail);
     synced++;
   });
 
-  return { synced, candidates: candidates.length };
+  return { synced, candidates: candidates.length, skipped: skip.size };
 }

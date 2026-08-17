@@ -95,6 +95,16 @@ export function getEventAgents(id: string, stage?: string) {
   return getJson<VlrEventAgentMap[]>(`/events/${id}/agents`, { stage });
 }
 
+/**
+ * Every match belonging to a tracked event (upcoming + completed), not just
+ * whatever fits in the global /matches or /results feed's pagination window.
+ * We only rely on `.id` here — each id still goes through getMatchDetail for
+ * the actual data, so we don't need to trust every field of this list shape.
+ */
+export function getEventMatches(id: string, stage?: string, status?: string) {
+  return getJson<Array<{ id: string }>>(`/events/${id}/matches`, { stage, status });
+}
+
 // ---- /matches (upcoming) & /results ----
 export interface VlrMatchTeamRef {
   name: string;
